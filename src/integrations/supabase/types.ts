@@ -14,7 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      semesters: {
+        Row: {
+          created_at: string
+          id: string
+          semester_name: string
+          semester_number: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          semester_name: string
+          semester_number: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          semester_name?: string
+          semester_number?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subjects: {
+        Row: {
+          course_code: string | null
+          created_at: string
+          credits: number
+          grade: number
+          id: string
+          semester_id: string
+          subject_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_code?: string | null
+          created_at?: string
+          credits?: number
+          grade?: number
+          id?: string
+          semester_id: string
+          subject_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_code?: string | null
+          created_at?: string
+          credits?: number
+          grade?: number
+          id?: string
+          semester_id?: string
+          subject_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
