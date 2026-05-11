@@ -16,6 +16,9 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
+import { Route as DashboardSemestersIndexRouteImport } from './routes/dashboard.semesters.index'
+import { Route as DashboardSemestersIdRouteImport } from './routes/dashboard.semesters.$id'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -52,6 +55,21 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSemestersIndexRoute = DashboardSemestersIndexRouteImport.update({
+  id: '/semesters/',
+  path: '/semesters/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSemestersIdRoute = DashboardSemestersIdRouteImport.update({
+  id: '/semesters/$id',
+  path: '/semesters/$id',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,7 +78,10 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
+  '/dashboard/semesters/': typeof DashboardSemestersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -68,7 +89,10 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
+  '/dashboard/semesters': typeof DashboardSemestersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -78,7 +102,10 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
+  '/dashboard/semesters/': typeof DashboardSemestersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -89,7 +116,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/dashboard/settings'
     | '/dashboard/'
+    | '/dashboard/semesters/$id'
+    | '/dashboard/semesters/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -97,7 +127,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/dashboard/settings'
     | '/dashboard'
+    | '/dashboard/semesters/$id'
+    | '/dashboard/semesters'
   id:
     | '__root__'
     | '/'
@@ -106,7 +139,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/signup'
+    | '/dashboard/settings'
     | '/dashboard/'
+    | '/dashboard/semesters/$id'
+    | '/dashboard/semesters/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -169,15 +205,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/semesters/': {
+      id: '/dashboard/semesters/'
+      path: '/semesters'
+      fullPath: '/dashboard/semesters/'
+      preLoaderRoute: typeof DashboardSemestersIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/semesters/$id': {
+      id: '/dashboard/semesters/$id'
+      path: '/semesters/$id'
+      fullPath: '/dashboard/semesters/$id'
+      preLoaderRoute: typeof DashboardSemestersIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardSemestersIdRoute: typeof DashboardSemestersIdRoute
+  DashboardSemestersIndexRoute: typeof DashboardSemestersIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardSemestersIdRoute: DashboardSemestersIdRoute,
+  DashboardSemestersIndexRoute: DashboardSemestersIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
