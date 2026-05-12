@@ -42,12 +42,12 @@ export const subjectSchema = z.object({
     ),
   credits: z
     .number({ invalid_type_error: "Credits must be a number" })
-    .refine((n) => Number.isFinite(n), "Credits must be a number")
+    .finite("Credits must be a number")
     .min(0.5, "Min 0.5")
     .max(30, "Max 30"),
   grade: z
     .number({ invalid_type_error: "Grade must be a number" })
-    .refine((n) => Number.isFinite(n), "Grade must be a number")
+    .finite("Grade must be a number")
     .min(0, "Min 0")
     .max(10, "Max 10"),
 });
