@@ -9,7 +9,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicStats } from "@/hooks/use-academic-data";
 import { toast } from "sonner";
-import { Download, Loader2 } from "lucide-react";
+import { Download } from "lucide-react";
+import { useAutosave } from "@/hooks/use-autosave";
+import { SaveIndicator } from "@/components/SaveIndicator";
+import { profileSchema, friendlyDbError } from "@/lib/validation";
 
 export const Route = createFileRoute("/dashboard/settings")({
   head: () => ({ meta: [{ title: "Settings — GradeFlow AI" }] }),
@@ -20,22 +23,38 @@ function SettingsPage() {
   const { user } = useAuth();
   const stats = useAcademicStats();
   const [fullName, setFullName] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
-      .then(({ data }) => setFullName(data?.full_name ?? ""));
+      .then(({ data }) => {
+        setFullName(data?.full_name ?? "");
+        setHydrated(true);
+      });
   }, [user]);
 
-  const saveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    const { error } = await supabase.from("profiles").update({ full_name: fullName.trim() }).eq("id", user!.id);
-    setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Profile updated");
-  };
+  const status = useAutosave(
+    fullName,
+    async (value) => {
+      const parsed = profileSchema.safeParse({ full_name: value });
+      if (!parsed.success) {
+        setNameError(parsed.error.issues[0]?.message ?? "Invalid");
+        throw new Error("validation");
+      }
+      setNameError(null);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: parsed.data.full_name })
+        .eq("id", user!.id);
+      if (error) {
+        toast.error(friendlyDbError(error));
+        throw error;
+      }
+    },
+    { delay: 800, enabled: hydrated && !!user },
+  );
 
   const exportData = () => {
     const payload = {
@@ -76,20 +95,28 @@ function SettingsPage() {
       </div>
 
       <Card className="glass p-6">
-        <h2 className="font-semibold text-lg">Profile</h2>
-        <form onSubmit={saveProfile} className="mt-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-lg">Profile</h2>
+          <SaveIndicator status={status} />
+        </div>
+        <div className="mt-5 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" value={user?.email ?? ""} disabled />
           </div>
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>
-            <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={100} />
+            <Input
+              id="name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              maxLength={100}
+              aria-invalid={!!nameError}
+            />
+            {nameError && <p className="text-xs text-destructive">{nameError}</p>}
+            <p className="text-xs text-muted-foreground">Changes save automatically as you type.</p>
           </div>
-          <Button type="submit" disabled={saving} className="gradient-bg text-primary-foreground border-0">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save profile"}
-          </Button>
-        </form>
+        </div>
       </Card>
 
       <Card className="glass p-6">
