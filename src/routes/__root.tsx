@@ -97,6 +97,7 @@ function RootComponent() {
       <ThemeProvider>
         <AuthProvider>
           <Outlet />
+          <OfflineBanner />
           <Toaster />
         </AuthProvider>
       </ThemeProvider>
