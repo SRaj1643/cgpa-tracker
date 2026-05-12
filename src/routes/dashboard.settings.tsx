@@ -9,7 +9,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicStats } from "@/hooks/use-academic-data";
 import { toast } from "sonner";
-import { Download, Loader2 } from "lucide-react";
+import { Download } from "lucide-react";
+import { useAutosave } from "@/hooks/use-autosave";
+import { SaveIndicator } from "@/components/SaveIndicator";
+import { profileSchema, friendlyDbError } from "@/lib/validation";
 
 export const Route = createFileRoute("/dashboard/settings")({
   head: () => ({ meta: [{ title: "Settings — GradeFlow AI" }] }),
