@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fmt, gradeColor } from "@/lib/grade-utils";
+import { semesterSchema, friendlyDbError } from "@/lib/validation";
 
 export const Route = createFileRoute("/dashboard/semesters/")({
   head: () => ({ meta: [{ title: "Semesters — GradeFlow AI" }] }),
