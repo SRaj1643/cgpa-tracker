@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useSubjectsForSemester, type SubjectRow } from "@/hooks/use-academic-data";
 import { calcSGPA, calcTotalCredits, fmt, gradeColor, gradeLetter } from "@/lib/grade-utils";
+import { subjectSchema, friendlyDbError, normalizeCourseCode } from "@/lib/validation";
+import { useDraft } from "@/hooks/use-draft";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/semesters/$id")({
