@@ -94,32 +94,46 @@ function SemesterDialog({
   const [num, setNum] = useState(editing?.semester_number ?? 1);
   const [name, setName] = useState(editing?.semester_name ?? "");
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) { toast.error("Name required"); return; }
-    if (num < 1 || num > 20) { toast.error("Semester number must be 1-20"); return; }
-    setSaving(true);
-    if (editing) {
-      const { error } = await supabase
-        .from("semesters")
-        .update({ semester_number: num, semester_name: name.trim() })
-        .eq("id", editing.id);
-      setSaving(false);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Semester updated");
-    } else {
-      const { error } = await supabase
-        .from("semesters")
-        .insert({ user_id: user!.id, semester_number: num, semester_name: name.trim() });
-      setSaving(false);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Semester added");
+    setErrors({});
+    const parsed = semesterSchema.safeParse({ semester_number: num, semester_name: name });
+    if (!parsed.success) {
+      const fe: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const k = issue.path[0]?.toString() ?? "_";
+        if (!fe[k]) fe[k] = issue.message;
+      }
+      setErrors(fe);
+      return;
     }
-    qc.invalidateQueries({ queryKey: ["semesters"] });
-    qc.invalidateQueries({ queryKey: ["subjects-all"] });
-    setOpen(false);
-    if (!editing) { setNum(num + 1); setName(""); }
+    setSaving(true);
+    try {
+      if (editing) {
+        const { error } = await supabase
+          .from("semesters")
+          .update({ semester_number: parsed.data.semester_number, semester_name: parsed.data.semester_name })
+          .eq("id", editing.id);
+        if (error) throw error;
+        toast.success("Semester updated");
+      } else {
+        const { error } = await supabase
+          .from("semesters")
+          .insert({ user_id: user!.id, semester_number: parsed.data.semester_number, semester_name: parsed.data.semester_name });
+        if (error) throw error;
+        toast.success("Semester added");
+      }
+      qc.invalidateQueries({ queryKey: ["semesters"] });
+      qc.invalidateQueries({ queryKey: ["subjects-all"] });
+      setOpen(false);
+      if (!editing) { setNum(parsed.data.semester_number + 1); setName(""); }
+    } catch (err) {
+      toast.error(friendlyDbError(err as { code?: string; message?: string }));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
