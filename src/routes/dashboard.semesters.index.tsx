@@ -154,11 +154,13 @@ function SemesterDialog({
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="num">Number</Label>
-              <Input id="num" type="number" min={1} max={20} value={num} onChange={(e) => setNum(Number(e.target.value))} required />
+              <Input id="num" type="number" min={1} max={20} value={num} onChange={(e) => setNum(Number(e.target.value))} required aria-invalid={!!errors.semester_number} />
+              {errors.semester_number && <p className="text-xs text-destructive">{errors.semester_number}</p>}
             </div>
             <div className="col-span-2 space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="e.g. Autumn 2024" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} />
+              <Input id="name" placeholder="e.g. Autumn 2024" value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} aria-invalid={!!errors.semester_name} />
+              {errors.semester_name && <p className="text-xs text-destructive">{errors.semester_name}</p>}
             </div>
           </div>
           <DialogFooter>
