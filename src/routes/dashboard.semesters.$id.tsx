@@ -161,33 +161,98 @@ function SubjectDialog({
   const [credits, setCredits] = useState<number>(editing?.credits ?? 3);
   const [grade, setGrade] = useState<number>(editing?.grade ?? 0);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Draft recovery — only for the "new subject" form. Editing existing rows
+  // should never restore a stale draft on top of fresh server data.
+  const draftKey = useMemo(
+    () => (editing || !user ? null : `gf:draft:subject:${user.id}:${semesterId}`),
+    [editing, user, semesterId],
+  );
+  const draftValue = useMemo(() => ({ name, code, credits, grade }), [name, code, credits, grade]);
+  const { storedDraft, clear: clearDraft } = useDraft(draftKey, draftValue, { enabled: open });
+
+  // When the new-subject dialog opens and a draft exists, offer to restore.
+  useEffect(() => {
+    if (!open || editing || !storedDraft) return;
+    const hasContent =
+      (storedDraft.name && storedDraft.name.trim()) ||
+      (storedDraft.code && storedDraft.code.trim()) ||
+      (storedDraft.grade && storedDraft.grade > 0);
+    if (!hasContent) return;
+    toast("Unsaved draft found", {
+      description: "Restore your previous entry?",
+      action: {
+        label: "Restore",
+        onClick: () => {
+          setName(storedDraft.name ?? "");
+          setCode(storedDraft.code ?? "");
+          setCredits(storedDraft.credits ?? 3);
+          setGrade(storedDraft.grade ?? 0);
+        },
+      },
+      cancel: { label: "Discard", onClick: () => clearDraft() },
+      duration: 8000,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) { toast.error("Subject name required"); return; }
-    if (credits <= 0 || credits > 30) { toast.error("Credits must be 1-30"); return; }
-    if (grade < 0 || grade > 10) { toast.error("Grade must be 0-10"); return; }
-    setSaving(true);
-    if (editing) {
-      const { error } = await supabase.from("subjects").update({
-        subject_name: name.trim(), course_code: code.trim() || null, credits, grade,
-      }).eq("id", editing.id);
-      setSaving(false);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Subject updated");
-    } else {
-      const { error } = await supabase.from("subjects").insert({
-        user_id: user!.id, semester_id: semesterId,
-        subject_name: name.trim(), course_code: code.trim() || null, credits, grade,
-      });
-      setSaving(false);
-      if (error) { toast.error(error.message); return; }
-      toast.success("Subject added");
-      setName(""); setCode(""); setCredits(3); setGrade(0);
+    setErrors({});
+    const parsed = subjectSchema.safeParse({
+      subject_name: name,
+      course_code: code || null,
+      credits,
+      grade,
+    });
+    if (!parsed.success) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of parsed.error.issues) {
+        const k = issue.path[0]?.toString() ?? "_";
+        if (!fieldErrors[k]) fieldErrors[k] = issue.message;
+      }
+      setErrors(fieldErrors);
+      return;
     }
-    qc.invalidateQueries({ queryKey: ["subjects", semesterId] });
-    qc.invalidateQueries({ queryKey: ["subjects-all"] });
-    setOpen(false);
+    const payload = parsed.data;
+    setSaving(true);
+    try {
+      if (editing) {
+        const { error } = await supabase.from("subjects").update({
+          subject_name: payload.subject_name,
+          course_code: payload.course_code,
+          credits: payload.credits,
+          grade: payload.grade,
+        }).eq("id", editing.id);
+        if (error) throw error;
+        toast.success("Subject updated");
+      } else {
+        const { error } = await supabase.from("subjects").insert({
+          user_id: user!.id,
+          semester_id: semesterId,
+          subject_name: payload.subject_name,
+          course_code: payload.course_code,
+          credits: payload.credits,
+          grade: payload.grade,
+        });
+        if (error) throw error;
+        toast.success("Subject added");
+        clearDraft();
+        setName(""); setCode(""); setCredits(3); setGrade(0);
+      }
+      qc.invalidateQueries({ queryKey: ["subjects", semesterId] });
+      qc.invalidateQueries({ queryKey: ["subjects-all"] });
+      setOpen(false);
+    } catch (err) {
+      const msg = friendlyDbError(err as { code?: string; message?: string });
+      if (msg.toLowerCase().includes("course code")) {
+        setErrors({ course_code: msg });
+      }
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -204,25 +269,65 @@ function SubjectDialog({
           <DialogTitle>{editing ? "Edit subject" : "Add a subject"}</DialogTitle>
           <DialogDescription>Grades are out of 10. Points = credits × grade.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-1 space-y-2">
               <Label htmlFor="code">Course Code</Label>
-              <Input id="code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="CS101" maxLength={20} />
+              <Input
+                id="code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                onBlur={(e) => setCode(normalizeCourseCode(e.target.value) ?? "")}
+                placeholder="CS101"
+                maxLength={20}
+                aria-invalid={!!errors.course_code}
+              />
+              {errors.course_code && <p className="text-xs text-destructive">{errors.course_code}</p>}
             </div>
             <div className="col-span-2 space-y-2">
               <Label htmlFor="sname">Subject Name</Label>
-              <Input id="sname" value={name} onChange={(e) => setName(e.target.value)} placeholder="Data Structures" required maxLength={120} />
+              <Input
+                id="sname"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Data Structures"
+                required
+                maxLength={120}
+                aria-invalid={!!errors.subject_name}
+              />
+              {errors.subject_name && <p className="text-xs text-destructive">{errors.subject_name}</p>}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="credits">Credits</Label>
-              <Input id="credits" type="number" step="0.5" min={0.5} max={30} value={credits} onChange={(e) => setCredits(Number(e.target.value))} required />
+              <Input
+                id="credits"
+                type="number"
+                step="0.5"
+                min={0.5}
+                max={30}
+                value={credits}
+                onChange={(e) => setCredits(Number(e.target.value))}
+                required
+                aria-invalid={!!errors.credits}
+              />
+              {errors.credits && <p className="text-xs text-destructive">{errors.credits}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="grade">Grade (out of 10)</Label>
-              <Input id="grade" type="number" step="0.1" min={0} max={10} value={grade} onChange={(e) => setGrade(Number(e.target.value))} required />
+              <Input
+                id="grade"
+                type="number"
+                step="0.1"
+                min={0}
+                max={10}
+                value={grade}
+                onChange={(e) => setGrade(Number(e.target.value))}
+                required
+                aria-invalid={!!errors.grade}
+              />
+              {errors.grade && <p className="text-xs text-destructive">{errors.grade}</p>}
             </div>
           </div>
           <DialogFooter>
