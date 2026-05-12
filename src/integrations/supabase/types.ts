@@ -114,7 +114,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      compute_cgpa: {
+        Args: never
+        Returns: {
+          cgpa: number
+          semester_count: number
+          total_credits: number
+        }[]
+      }
+      compute_sgpa: {
+        Args: { _semester_id: string }
+        Returns: {
+          sgpa: number
+          subject_count: number
+          total_credits: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
