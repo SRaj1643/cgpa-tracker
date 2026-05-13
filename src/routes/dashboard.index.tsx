@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useAcademicStats } from "@/hooks/use-academic-data";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Trophy, TrendingUp, GraduationCap, BookOpen, Plus, Sparkles, Flame, Award,
-  ArrowRight,
+  ArrowRight, Calculator, Calendar, Lock,
 } from "lucide-react";
 import { fmt, gradeColor } from "@/lib/grade-utils";
+import { generateInsights, computeAchievements } from "@/lib/insights";
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid, Cell, PieChart, Pie,
 } from "recharts";
