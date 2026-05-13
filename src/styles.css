@@ -222,3 +222,46 @@
     animation: shimmer 2s infinite;
   }
 }
+
+/* ──────── Theme presets (layered on top of .dark base) ──────── */
+
+.dark.theme-amoled {
+  --background: oklch(0 0 0);
+  --card: oklch(0.08 0 0);
+  --popover: oklch(0.08 0 0);
+  --secondary: oklch(0.13 0 0);
+  --muted: oklch(0.13 0 0);
+  --sidebar: oklch(0.04 0 0);
+  --sidebar-accent: oklch(0.13 0 0);
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.1);
+}
+
+.dark.theme-iitk {
+  --background: oklch(0.16 0.05 250);
+  --card: oklch(0.21 0.06 250);
+  --popover: oklch(0.21 0.06 250);
+  --secondary: oklch(0.26 0.06 250);
+  --muted: oklch(0.26 0.06 250);
+  --sidebar: oklch(0.18 0.06 250);
+  --sidebar-accent: oklch(0.26 0.06 250);
+  --primary: oklch(0.7 0.18 235);
+  --primary-glow: oklch(0.78 0.16 200);
+  --ring: oklch(0.7 0.18 235);
+  --gradient-primary: linear-gradient(135deg, oklch(0.7 0.18 235), oklch(0.78 0.16 200));
+}
+
+.dark.theme-cyberpunk {
+  --background: oklch(0.12 0.04 320);
+  --card: oklch(0.17 0.05 320);
+  --popover: oklch(0.17 0.05 320);
+  --secondary: oklch(0.22 0.06 320);
+  --muted: oklch(0.22 0.06 320);
+  --sidebar: oklch(0.14 0.05 320);
+  --sidebar-accent: oklch(0.22 0.06 320);
+  --primary: oklch(0.72 0.28 340);
+  --primary-glow: oklch(0.82 0.2 195);
+  --ring: oklch(0.72 0.28 340);
+  --gradient-primary: linear-gradient(135deg, oklch(0.72 0.28 340), oklch(0.82 0.2 195));
+}
+
