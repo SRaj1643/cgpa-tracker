@@ -16,6 +16,8 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardTimelineRouteImport } from './routes/dashboard.timeline'
+import { Route as DashboardSimulatorRouteImport } from './routes/dashboard.simulator'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardSemestersIndexRouteImport } from './routes/dashboard.semesters.index'
 import { Route as DashboardSemestersIdRouteImport } from './routes/dashboard.semesters.$id'
@@ -55,6 +57,16 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardTimelineRoute = DashboardTimelineRouteImport.update({
+  id: '/timeline',
+  path: '/timeline',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardSimulatorRoute = DashboardSimulatorRouteImport.update({
+  id: '/simulator',
+  path: '/simulator',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -79,6 +91,8 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/simulator': typeof DashboardSimulatorRoute
+  '/dashboard/timeline': typeof DashboardTimelineRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
   '/dashboard/semesters/': typeof DashboardSemestersIndexRoute
@@ -90,6 +104,8 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/simulator': typeof DashboardSimulatorRoute
+  '/dashboard/timeline': typeof DashboardTimelineRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
   '/dashboard/semesters': typeof DashboardSemestersIndexRoute
@@ -103,6 +119,8 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/simulator': typeof DashboardSimulatorRoute
+  '/dashboard/timeline': typeof DashboardTimelineRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
   '/dashboard/semesters/': typeof DashboardSemestersIndexRoute
@@ -117,6 +135,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/dashboard/settings'
+    | '/dashboard/simulator'
+    | '/dashboard/timeline'
     | '/dashboard/'
     | '/dashboard/semesters/$id'
     | '/dashboard/semesters/'
@@ -128,6 +148,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/dashboard/settings'
+    | '/dashboard/simulator'
+    | '/dashboard/timeline'
     | '/dashboard'
     | '/dashboard/semesters/$id'
     | '/dashboard/semesters'
@@ -140,6 +162,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/dashboard/settings'
+    | '/dashboard/simulator'
+    | '/dashboard/timeline'
     | '/dashboard/'
     | '/dashboard/semesters/$id'
     | '/dashboard/semesters/'
@@ -205,6 +229,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/timeline': {
+      id: '/dashboard/timeline'
+      path: '/timeline'
+      fullPath: '/dashboard/timeline'
+      preLoaderRoute: typeof DashboardTimelineRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/simulator': {
+      id: '/dashboard/simulator'
+      path: '/simulator'
+      fullPath: '/dashboard/simulator'
+      preLoaderRoute: typeof DashboardSimulatorRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/settings': {
       id: '/dashboard/settings'
       path: '/settings'
@@ -231,6 +269,8 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardSimulatorRoute: typeof DashboardSimulatorRoute
+  DashboardTimelineRoute: typeof DashboardTimelineRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardSemestersIdRoute: typeof DashboardSemestersIdRoute
   DashboardSemestersIndexRoute: typeof DashboardSemestersIndexRoute
@@ -238,6 +278,8 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardSettingsRoute: DashboardSettingsRoute,
+  DashboardSimulatorRoute: DashboardSimulatorRoute,
+  DashboardTimelineRoute: DashboardTimelineRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardSemestersIdRoute: DashboardSemestersIdRoute,
   DashboardSemestersIndexRoute: DashboardSemestersIndexRoute,
