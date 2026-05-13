@@ -84,11 +84,17 @@ function DashboardHome() {
   const distData = Object.entries(buckets).map(([name, value]) => ({ name, value }));
   const pieColors = ["oklch(0.7 0.2 280)", "oklch(0.78 0.18 220)", "oklch(0.72 0.16 155)", "oklch(0.82 0.16 75)", "oklch(0.65 0.22 27)"];
 
-  // Streak: count consecutive semesters with SGPA >= 8
+  // Excellence streak: trailing semesters with SGPA >= 8
   let streak = 0;
   for (let i = semesters.length - 1; i >= 0; i--) {
     if (semesters[i].sgpa >= 8) streak++; else break;
   }
+
+  const insights = useMemo(() => generateInsights(semesters, cgpa), [semesters, cgpa]);
+  const achievements = useMemo(
+    () => computeAchievements({ semesters, cgpa, totalCredits }),
+    [semesters, cgpa, totalCredits],
+  );
 
   return (
     <div className="space-y-8">
@@ -97,9 +103,14 @@ function DashboardHome() {
           <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">Overview</h1>
           <p className="text-muted-foreground mt-1">A snapshot of your academic journey.</p>
         </div>
-        <Button asChild className="gradient-bg text-primary-foreground border-0 shadow-elegant">
-          <Link to="/dashboard/semesters"><Plus className="h-4 w-4 mr-2" />Add semester</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/dashboard/simulator"><Calculator className="h-4 w-4 mr-2" />Simulator</Link>
+          </Button>
+          <Button asChild className="gradient-bg text-primary-foreground border-0 shadow-elegant">
+            <Link to="/dashboard/semesters"><Plus className="h-4 w-4 mr-2" />Add semester</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
