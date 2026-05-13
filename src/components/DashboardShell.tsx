@@ -3,7 +3,7 @@ import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard, BookOpen, Settings, LogOut, Menu, X,
+  LayoutDashboard, BookOpen, Settings, LogOut, Menu, X, Calculator, Calendar,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 const nav = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/dashboard/semesters", label: "Semesters", icon: BookOpen, exact: false },
+  { to: "/dashboard/timeline", label: "Timeline", icon: Calendar, exact: true },
+  { to: "/dashboard/simulator", label: "Simulator", icon: Calculator, exact: true },
   { to: "/dashboard/settings", label: "Settings", icon: Settings, exact: true },
 ];
 
