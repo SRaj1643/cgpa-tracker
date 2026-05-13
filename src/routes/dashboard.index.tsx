@@ -230,14 +230,21 @@ function DashboardHome() {
                   <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
                     <Sparkles className="h-5 w-5" />
                   </div>
-                  <div className="text-sm font-semibold">AI Insight</div>
+                  <div className="text-sm font-semibold">Insights</div>
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                  {cgpa >= 9 ? "Outstanding work — you're in the top tier. Keep this consistency for a stellar transcript."
-                  : cgpa >= 8 ? "Solid performance. Push high-credit subjects next semester to break into A+ territory."
-                  : cgpa >= 7 ? "On track. Targeting a 9+ in 1-2 high-credit subjects can lift your CGPA noticeably."
-                  : "Focus on attendance and consistent revision — small wins compound fast."}
-                </p>
+                <ul className="mt-3 space-y-2.5">
+                  {insights.length === 0 && (
+                    <li className="text-xs text-muted-foreground">Add a few semesters to unlock trend insights.</li>
+                  )}
+                  {insights.map((ins, i) => (
+                    <li key={i} className="text-sm leading-relaxed flex gap-2">
+                      <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                        ins.tone === "positive" ? "bg-success" : ins.tone === "warning" ? "bg-warning" : "bg-primary"
+                      }`} />
+                      <span className="text-muted-foreground">{ins.text}</span>
+                    </li>
+                  ))}
+                </ul>
               </Card>
 
               <Card className="glass p-5">
@@ -248,11 +255,20 @@ function DashboardHome() {
                   <div className="text-sm font-semibold">Achievements</div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {semesterCount >= 1 && <Badge>First Semester</Badge>}
-                  {cgpa >= 8 && <Badge>Distinction</Badge>}
-                  {cgpa >= 9 && <Badge>Excellence</Badge>}
-                  {streak >= 3 && <Badge>3+ Streak</Badge>}
-                  {totalCredits >= 100 && <Badge>100+ Credits</Badge>}
+                  {achievements.map((a) => (
+                    <span
+                      key={a.id}
+                      title={a.hint}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium border transition ${
+                        a.earned
+                          ? "bg-primary/10 border-primary/40 text-foreground"
+                          : "bg-secondary/40 border-border text-muted-foreground opacity-60"
+                      }`}
+                    >
+                      {!a.earned && <Lock className="h-3 w-3" />}
+                      {a.label}
+                    </span>
+                  ))}
                 </div>
               </Card>
             </div>
