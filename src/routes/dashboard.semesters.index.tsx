@@ -178,7 +178,7 @@ function DeleteSemester({ id, name }: { id: string; name: string }) {
   const qc = useQueryClient();
   const onDelete = async () => {
     const { error } = await supabase.from("semesters").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyDbError(error)); return; }
     toast.success("Semester deleted");
     qc.invalidateQueries({ queryKey: ["semesters"] });
     qc.invalidateQueries({ queryKey: ["subjects-all"] });

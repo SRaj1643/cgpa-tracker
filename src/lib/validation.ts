@@ -68,5 +68,8 @@ export function friendlyDbError(err: { code?: string; message?: string } | null 
   if (err.code === "23505") return "This course code already exists in this semester.";
   if (err.code === "23514") return "One of the values is out of the allowed range.";
   if (err.code === "PGRST301" || err.code === "42501") return "You don't have permission to do that.";
-  return err.message ?? "Unexpected error";
+  if (err.code === "23503") return "This item is referenced by other data and cannot be removed.";
+  if (err.code === "PGRST116") return "The requested item was not found.";
+  // Generic fallback — never leak raw DB/PostgREST messages to users.
+  return "Something went wrong. Please try again.";
 }
