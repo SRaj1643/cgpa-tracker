@@ -1,6 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, BookOpen, Settings, LogOut, Menu, X, Calculator, Calendar,
@@ -9,6 +10,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+
+const TITLES: Array<{ match: (p: string) => boolean; title: string }> = [
+  { match: (p) => p === "/dashboard", title: "Overview" },
+  { match: (p) => p.startsWith("/dashboard/semesters"), title: "Semesters" },
+  { match: (p) => p.startsWith("/dashboard/timeline"), title: "Timeline" },
+  { match: (p) => p.startsWith("/dashboard/simulator"), title: "Simulator" },
+  { match: (p) => p.startsWith("/dashboard/settings"), title: "Profile" },
+];
 
 const nav = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -89,20 +98,31 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 backdrop-blur bg-background/70 border-b">
-          <div className="flex items-center justify-between px-4 sm:px-8 h-16">
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)}>
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="lg:hidden"><Logo /></div>
+        <header className="sticky top-0 z-30 backdrop-blur-xl bg-background/75 border-b">
+          <div className="flex items-center justify-between gap-2 px-4 sm:px-8 h-14 lg:h-16">
+            <div className="flex items-center gap-2 min-w-0">
+              <Button variant="ghost" size="icon" className="lg:hidden -ml-2" onClick={() => setOpen(true)} aria-label="Open menu">
+                <Menu className="h-5 w-5" />
+              </Button>
+              <div className="lg:hidden font-display font-semibold tracking-tight truncate">
+                {TITLES.find((t) => t.match(location.pathname))?.title ?? "GradeFlow"}
+              </div>
+            </div>
             <div className="hidden lg:block text-sm text-muted-foreground">
               Welcome back 👋
             </div>
             <ThemeToggle />
           </div>
         </header>
-        <main className="px-4 sm:px-8 py-8 max-w-7xl mx-auto">{children}</main>
+        <main
+          className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl mx-auto animate-fade-in"
+          style={{ paddingBottom: "max(6rem, calc(env(safe-area-inset-bottom) + 6rem))" }}
+        >
+          {children}
+        </main>
       </div>
+
+      <MobileBottomNav />
     </div>
   );
 }
