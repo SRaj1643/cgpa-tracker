@@ -162,9 +162,19 @@ function CpiGoal({
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               next semester (over {nextCredits} credits) to reach a CPI of {target.toFixed(2)}.
             </p>
+            {probability && (
+              <div className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+                probability.tone === "positive"
+                  ? "bg-success/10 border-success/30 text-success"
+                  : "bg-warning/10 border-warning/30 text-warning"
+              }`}>
+                {probability.label} · ~{probability.pct}% based on your history
+              </div>
+            )}
           </div>
         )}
       </Card>
+      </div>
     </div>
   );
 }
