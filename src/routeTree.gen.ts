@@ -20,6 +20,7 @@ import { Route as DashboardTimelineRouteImport } from './routes/dashboard.timeli
 import { Route as DashboardSimulatorRouteImport } from './routes/dashboard.simulator'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardSemestersIndexRouteImport } from './routes/dashboard.semesters.index'
+import { Route as DashboardWrappedIdRouteImport } from './routes/dashboard.wrapped.$id'
 import { Route as DashboardSemestersIdRouteImport } from './routes/dashboard.semesters.$id'
 
 const SignupRoute = SignupRouteImport.update({
@@ -77,6 +78,11 @@ const DashboardSemestersIndexRoute = DashboardSemestersIndexRouteImport.update({
   path: '/semesters/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardWrappedIdRoute = DashboardWrappedIdRouteImport.update({
+  id: '/wrapped/$id',
+  path: '/wrapped/$id',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSemestersIdRoute = DashboardSemestersIdRouteImport.update({
   id: '/semesters/$id',
   path: '/semesters/$id',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/timeline': typeof DashboardTimelineRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
+  '/dashboard/wrapped/$id': typeof DashboardWrappedIdRoute
   '/dashboard/semesters/': typeof DashboardSemestersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/dashboard/timeline': typeof DashboardTimelineRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
+  '/dashboard/wrapped/$id': typeof DashboardWrappedIdRoute
   '/dashboard/semesters': typeof DashboardSemestersIndexRoute
 }
 export interface FileRoutesById {
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/dashboard/timeline': typeof DashboardTimelineRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/semesters/$id': typeof DashboardSemestersIdRoute
+  '/dashboard/wrapped/$id': typeof DashboardWrappedIdRoute
   '/dashboard/semesters/': typeof DashboardSemestersIndexRoute
 }
 export interface FileRouteTypes {
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/dashboard/timeline'
     | '/dashboard/'
     | '/dashboard/semesters/$id'
+    | '/dashboard/wrapped/$id'
     | '/dashboard/semesters/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/dashboard/timeline'
     | '/dashboard'
     | '/dashboard/semesters/$id'
+    | '/dashboard/wrapped/$id'
     | '/dashboard/semesters'
   id:
     | '__root__'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/dashboard/timeline'
     | '/dashboard/'
     | '/dashboard/semesters/$id'
+    | '/dashboard/wrapped/$id'
     | '/dashboard/semesters/'
   fileRoutesById: FileRoutesById
 }
@@ -257,6 +269,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSemestersIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/wrapped/$id': {
+      id: '/dashboard/wrapped/$id'
+      path: '/wrapped/$id'
+      fullPath: '/dashboard/wrapped/$id'
+      preLoaderRoute: typeof DashboardWrappedIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/semesters/$id': {
       id: '/dashboard/semesters/$id'
       path: '/semesters/$id'
@@ -273,6 +292,7 @@ interface DashboardRouteChildren {
   DashboardTimelineRoute: typeof DashboardTimelineRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardSemestersIdRoute: typeof DashboardSemestersIdRoute
+  DashboardWrappedIdRoute: typeof DashboardWrappedIdRoute
   DashboardSemestersIndexRoute: typeof DashboardSemestersIndexRoute
 }
 
@@ -282,6 +302,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardTimelineRoute: DashboardTimelineRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardSemestersIdRoute: DashboardSemestersIdRoute,
+  DashboardWrappedIdRoute: DashboardWrappedIdRoute,
   DashboardSemestersIndexRoute: DashboardSemestersIndexRoute,
 }
 
