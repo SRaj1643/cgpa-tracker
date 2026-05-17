@@ -232,14 +232,17 @@ function DashboardHome() {
                 <Target className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold">Next milestone: {nextGoal.target.toFixed(1)} CGPA</div>
+                <div className="text-sm font-semibold">
+                  {nextGoal.custom ? "Your goal" : "Next milestone"}: {nextGoal.target.toFixed(2)} CGPA
+                </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  You're {nextGoal.delta.toFixed(2)} away. One strong semester can close the gap.
+                  You're {nextGoal.delta.toFixed(2)} away ·{" "}
+                  {Math.round(goalProgress(cgpa, nextGoal.target))}% there. One strong semester closes the gap.
                 </p>
                 <div className="mt-2.5 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
                   <div
                     className="h-full gradient-bg transition-all duration-500"
-                    style={{ width: `${Math.min(100, (cgpa / nextGoal.target) * 100)}%` }}
+                    style={{ width: `${goalProgress(cgpa, nextGoal.target)}%` }}
                   />
                 </div>
               </div>
