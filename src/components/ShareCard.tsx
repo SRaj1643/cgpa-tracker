@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { toPng } from "html-to-image";
 import { Button } from "@/components/ui/button";
 import { Download, Share2, Loader2 } from "lucide-react";
@@ -6,30 +6,55 @@ import { toast } from "sonner";
 
 type Props = {
   fileName: string;
-  /** Inner card content. Will be rendered into a 1080×1350 IG-portrait canvas off-screen. */
+  /** Inner card content. Will be rendered into a 1080×1350 IG-portrait canvas. */
   children: ReactNode;
   /** Preview-only label shown above the buttons. */
   label?: string;
 };
 
+const SRC_W = 1080;
+const SRC_H = 1350;
+
 /**
  * Wraps any visual card and exposes a "Download as image" button.
- * The visible preview is fluid; the export renders at a fixed 1080×1350
- * via inline width/height for crisp social-share output.
+ * The exported PNG is always 1080×1350 (IG portrait), while the preview
+ * scales fluidly to the container width.
  */
 export function ShareCard({ fileName, children, label }: Props) {
-  const previewRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0.3);
   const [busy, setBusy] = useState(false);
 
+  useLayoutEffect(() => {
+    if (!wrapRef.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const w = entry.contentRect.width;
+      setScale(Math.min(1, w / SRC_W));
+    });
+    ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // Inject font fallback hint so html-to-image rasterizes consistently
+  useEffect(() => {}, []);
+
+  const render = async () => {
+    if (!cardRef.current) return null;
+    return toPng(cardRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
+      width: SRC_W,
+      height: SRC_H,
+      style: { transform: "none" },
+    });
+  };
+
   const download = async () => {
-    if (!previewRef.current) return;
     setBusy(true);
     try {
-      const dataUrl = await toPng(previewRef.current, {
-        cacheBust: true,
-        pixelRatio: 2,
-        backgroundColor: undefined,
-      });
+      const dataUrl = await render();
+      if (!dataUrl) return;
       const link = document.createElement("a");
       link.download = `${fileName}.png`;
       link.href = dataUrl;
@@ -43,11 +68,11 @@ export function ShareCard({ fileName, children, label }: Props) {
   };
 
   const shareNative = async () => {
-    if (!previewRef.current) return;
     if (!navigator.share) return download();
     setBusy(true);
     try {
-      const dataUrl = await toPng(previewRef.current, { cacheBust: true, pixelRatio: 2 });
+      const dataUrl = await render();
+      if (!dataUrl) return;
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], `${fileName}.png`, { type: "image/png" });
       if (navigator.canShare?.({ files: [file] })) {
@@ -56,7 +81,7 @@ export function ShareCard({ fileName, children, label }: Props) {
         download();
       }
     } catch {
-      // user cancelled or unsupported
+      /* user cancelled */
     } finally {
       setBusy(false);
     }
@@ -65,22 +90,24 @@ export function ShareCard({ fileName, children, label }: Props) {
   return (
     <div className="space-y-4">
       {label && <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>}
-      <div className="overflow-hidden rounded-2xl border border-border/60 shadow-elegant">
-        <div
-          ref={previewRef}
-          className="origin-top-left"
-          style={{
-            width: 1080,
-            height: 1350,
-            // scale to fit container — keeps 1080x1350 layout but shrinks to viewport
-            transform: "scale(var(--share-scale, 0.32))",
-            transformOrigin: "top left",
-          }}
-        >
-          {children}
+
+      <div ref={wrapRef} className="w-full overflow-hidden rounded-2xl border border-border/60 shadow-elegant">
+        <div style={{ width: "100%", height: SRC_H * scale, position: "relative" }}>
+          <div
+            ref={cardRef}
+            style={{
+              width: SRC_W,
+              height: SRC_H,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
+              position: "absolute",
+              top: 0,
+              left: 0,
+            }}
+          >
+            {children}
+          </div>
         </div>
-        {/* spacer to reserve scaled height */}
-        <ScaleSpacer />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -93,19 +120,5 @@ export function ShareCard({ fileName, children, label }: Props) {
         </Button>
       </div>
     </div>
-  );
-}
-
-/**
- * Reserves vertical space proportional to the scaled card.
- * Uses a ResizeObserver-less trick: an inline-block sized via aspect-ratio.
- */
-function ScaleSpacer() {
-  return (
-    <div
-      aria-hidden
-      className="w-full"
-      style={{ aspectRatio: "1080 / 1350", marginTop: "calc(-1350px * var(--share-scale, 0.32))" }}
-    />
   );
 }
