@@ -2,16 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useAcademicStats } from "@/hooks/use-academic-data";
 import { useAuth } from "@/hooks/use-auth";
+import { useTargetCpi } from "@/hooks/use-target-cpi";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Trophy, TrendingUp, GraduationCap, BookOpen, Plus, Sparkles, Flame, Award,
-  ArrowRight, Calculator, Lock, Target, Activity,
+  ArrowRight, Calculator, Lock, Target, Activity, Gift,
 } from "lucide-react";
 import { fmt, gradeColor } from "@/lib/grade-utils";
 import { generateInsights, computeAchievements } from "@/lib/insights";
-import { academicHealth, timeGreeting, dailyLine } from "@/lib/academic-health";
+import { academicHealth, timeGreeting, dailyLine, goalProgress } from "@/lib/academic-health";
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis, Tooltip, BarChart, Bar, CartesianGrid, Cell, PieChart, Pie,
 } from "recharts";
@@ -68,6 +69,7 @@ function HealthPill({ tone, label }: { tone: "positive" | "warning" | "neutral";
 function DashboardHome() {
   const { user } = useAuth();
   const { loading, semesters, totalCredits, cgpa, currentSGPA, semesterCount, subjects } = useAcademicStats();
+  const { target: savedTarget } = useTargetCpi();
 
   // All hooks must run before any early return.
   const greeting = useMemo(() => timeGreeting(), []);
@@ -116,11 +118,16 @@ function DashboardHome() {
 
   const nextGoal = useMemo(() => {
     if (semesterCount === 0) return null;
+    // If user saved a target, use it; otherwise default to next 0.5 milestone
+    if (savedTarget != null && savedTarget > cgpa) {
+      return { target: savedTarget, delta: savedTarget - cgpa, custom: true };
+    }
     const nextRound = Math.min(10, Math.ceil((cgpa + 0.5) * 2) / 2);
     if (nextRound <= cgpa) return null;
-    const delta = nextRound - cgpa;
-    return { target: nextRound, delta };
-  }, [cgpa, semesterCount]);
+    return { target: nextRound, delta: nextRound - cgpa, custom: false };
+  }, [cgpa, semesterCount, savedTarget]);
+
+  const latestSemId = semesters[semesters.length - 1]?.id;
 
   if (loading) {
     return (
@@ -185,6 +192,13 @@ function DashboardHome() {
           <Button asChild size="sm" variant="outline">
             <Link to="/dashboard/simulator"><Calculator className="h-4 w-4 mr-1.5" />Simulate</Link>
           </Button>
+          {latestSemId && (
+            <Button asChild size="sm" variant="outline">
+              <Link to="/dashboard/wrapped/$id" params={{ id: latestSemId }}>
+                <Gift className="h-4 w-4 mr-1.5" />Sem wrapped
+              </Link>
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -218,14 +232,17 @@ function DashboardHome() {
                 <Target className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold">Next milestone: {nextGoal.target.toFixed(1)} CGPA</div>
+                <div className="text-sm font-semibold">
+                  {nextGoal.custom ? "Your goal" : "Next milestone"}: {nextGoal.target.toFixed(2)} CGPA
+                </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  You're {nextGoal.delta.toFixed(2)} away. One strong semester can close the gap.
+                  You're {nextGoal.delta.toFixed(2)} away ·{" "}
+                  {Math.round(goalProgress(cgpa, nextGoal.target))}% there. One strong semester closes the gap.
                 </p>
                 <div className="mt-2.5 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
                   <div
                     className="h-full gradient-bg transition-all duration-500"
-                    style={{ width: `${Math.min(100, (cgpa / nextGoal.target) * 100)}%` }}
+                    style={{ width: `${goalProgress(cgpa, nextGoal.target)}%` }}
                   />
                 </div>
               </div>

@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Target, Sparkles, RotateCcw, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Target, Sparkles, RotateCcw, TrendingUp, TrendingDown, Minus, Save, Trash2 } from "lucide-react";
 import { useAcademicStats } from "@/hooks/use-academic-data";
 import { useSubjectsForSemester } from "@/hooks/use-academic-data";
 import { calcSGPA, calcCGPA, fmt, gradeColor } from "@/lib/grade-utils";
 import { simulateCpiGoal } from "@/lib/insights";
+import { useTargetCpi } from "@/hooks/use-target-cpi";
+import { reachProbability } from "@/lib/wrapped";
 
 export const Route = createFileRoute("/dashboard/simulator")({
   head: () => ({ meta: [{ title: "Simulator — GradeFlow AI" }] }),
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/dashboard/simulator")({
 
 function SimulatorPage() {
   const { loading, semesters, cgpa, totalCredits } = useAcademicStats();
+  const sgpas = useMemo(() => semesters.map((s) => s.sgpa), [semesters]);
 
   if (loading) return <Skeleton className="h-96" />;
 
@@ -35,7 +38,7 @@ function SimulatorPage() {
           <TabsTrigger value="whatif"><Sparkles className="h-4 w-4 mr-2" />What If</TabsTrigger>
         </TabsList>
         <TabsContent value="goal" className="mt-6">
-          <CpiGoal currentCPI={cgpa} currentCredits={totalCredits} />
+          <CpiGoal currentCPI={cgpa} currentCredits={totalCredits} sgpas={sgpas} />
         </TabsContent>
         <TabsContent value="whatif" className="mt-6">
           <WhatIf semesters={semesters} cgpa={cgpa} />
@@ -47,17 +50,69 @@ function SimulatorPage() {
 
 // ───────────────── CPI Goal ─────────────────
 
-function CpiGoal({ currentCPI, currentCredits }: { currentCPI: number; currentCredits: number }) {
-  const [target, setTarget] = useState<number>(Math.min(10, Math.ceil(currentCPI + 0.5)));
+function CpiGoal({
+  currentCPI, currentCredits, sgpas,
+}: { currentCPI: number; currentCredits: number; sgpas: number[] }) {
+  const { target: savedTarget, setTarget: persistTarget, saving } = useTargetCpi();
+  const [target, setTarget] = useState<number>(
+    savedTarget ?? Math.min(10, Math.ceil(currentCPI + 0.5)),
+  );
   const [nextCredits, setNextCredits] = useState<number>(20);
+
+  // Hydrate when saved target arrives.
+  useEffect(() => {
+    if (savedTarget != null) setTarget(savedTarget);
+  }, [savedTarget]);
 
   const result = useMemo(
     () => simulateCpiGoal({ currentCPI, currentCredits, targetCPI: target, nextCredits }),
     [currentCPI, currentCredits, target, nextCredits],
   );
 
+  const progressPct = Math.max(0, Math.min(100, (currentCPI / Math.max(target, 0.01)) * 100));
+  const probability = useMemo(() => {
+    if (result.kind !== "ok") return null;
+    return reachProbability({ requiredSGPA: result.requiredSGPA, sgpas });
+  }, [result, sgpas]);
+
+  const isDirty = savedTarget == null || Math.abs(savedTarget - target) > 0.001;
+
   return (
-    <div className="grid lg:grid-cols-2 gap-6">
+    <div className="space-y-4">
+      {/* Road to Target — persistent */}
+      <Card className="glass p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <h3 className="font-semibold">Road to Target CPI</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Your saved goal: <span className="font-medium text-foreground">
+                {savedTarget == null ? "not set" : savedTarget.toFixed(2)}
+              </span>
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => persistTarget(target)} disabled={saving || !isDirty}
+              className="gradient-bg text-primary-foreground border-0">
+              <Save className="h-3.5 w-3.5 mr-1.5" /> Save goal
+            </Button>
+            {savedTarget != null && (
+              <Button size="sm" variant="ghost" onClick={() => persistTarget(null)} disabled={saving}>
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Clear
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="mt-4 flex items-end justify-between text-sm">
+          <span className="tabular-nums font-medium">{fmt(currentCPI)}</span>
+          <span className="text-muted-foreground">{Math.round(progressPct)}%</span>
+          <span className="tabular-nums font-medium">{target.toFixed(2)}</span>
+        </div>
+        <div className="mt-1.5 h-2 w-full rounded-full bg-secondary overflow-hidden">
+          <div className="h-full gradient-bg transition-all duration-500" style={{ width: `${progressPct}%` }} />
+        </div>
+      </Card>
+
+      <div className="grid lg:grid-cols-2 gap-6">
       <Card className="glass p-6 space-y-4">
         <h3 className="font-semibold">Inputs</h3>
         <div className="grid grid-cols-2 gap-3">
@@ -107,9 +162,19 @@ function CpiGoal({ currentCPI, currentCredits }: { currentCPI: number; currentCr
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               next semester (over {nextCredits} credits) to reach a CPI of {target.toFixed(2)}.
             </p>
+            {probability && (
+              <div className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+                probability.tone === "positive"
+                  ? "bg-success/10 border-success/30 text-success"
+                  : "bg-warning/10 border-warning/30 text-warning"
+              }`}>
+                {probability.label} · ~{probability.pct}% based on your history
+              </div>
+            )}
           </div>
         )}
       </Card>
+      </div>
     </div>
   );
 }
